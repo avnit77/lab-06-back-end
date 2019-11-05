@@ -35,7 +35,7 @@ const geoData = require('./data/geo.json');
 // Helper Functions
 function getLatLng(location) {
     // simulate an error if special "bad location" is provided:
-    if (location == 'bad location') {
+    if (location === 'bad location') {
         throw new Error();
     }
 
@@ -43,10 +43,10 @@ function getLatLng(location) {
     // api call will go here
 
     // convert to desired data format:
-    return toLocation(geoData);
+    return toLocation();
 }
 
-function toLocation(/*geoData*/) {
+function toLocation() {
     const firstResult = geoData.results[0];
     const geometry = firstResult.geometry;
 
@@ -56,6 +56,34 @@ function toLocation(/*geoData*/) {
         longitude: geometry.location.lng
     };
 }
+
+const darkSky = require('./data/darksky.json');
+
+app.get('/weather', (request, response) => {
+    try {
+        const location = toLocation();
+        const weather = getWeather(location);
+        response.status(200).json(weather);
+    }
+    catch (err) {
+        response.status(500).send('error');
+    }
+});
+
+function getWeather() {
+    const forecast = [];
+
+    darkSky.daily.data.forEach(day => {
+        let date = new Date(day.time);
+        let dateString = date.toDateString();
+        forecast.push({
+            'forecast': day.summary,
+            'time': dateString
+        });
+    });
+    return forecast;
+}
+
 
 // Start the server
 app.listen(PORT, () => {
