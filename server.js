@@ -45,6 +45,31 @@ const getWeatherResponse = async(lat, long) => {
     return dailyArray;
 };
 
+const getTrailResponse = async(lat, lng) => {
+    const HIKING_API_KEY = process.env.HIKING_API_KEY;
+
+    const trailItem = await superagent.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=200&key=${HIKING_API_KEY}`);
+
+
+    const actualTrailData = JSON.parse(trailItem.text);
+    const dailyArray = actualTrailData.trails.map((item) => {
+        return {
+            name: item.name,
+            location: item.location,
+            length: item.length,
+            stars: item.stars,
+            star_votes: item.starVotes,
+            summary: item.summary,
+            trail_url: item.url,
+            conditions: item.conditionStatus,
+            condition_date: item.conditionDate.slice(0, 10),
+            condition_time: item.conditionTime.slice(11)
+        };
+    });
+
+    return dailyArray;
+};
+
 app.get('/location', async(req, res) => {
     try {
         const searchQuery = req.query.search;
@@ -67,6 +92,16 @@ app.get('/weather', async(req, res) => {
         const weatherObject = await getWeatherResponse(latlngs.latitude, latlngs.longitude);
 
         res.json(weatherObject);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
+app.get('/trails', async(req, res) => {
+    try {
+        const trailObject = await getTrailResponse(latlngs.latitude, latlngs.longitude);
+
+        res.json(trailObject);
     } catch (e) {
         throw new Error(e);
     }
