@@ -70,6 +70,25 @@ const getTrailResponse = async(lat, lng) => {
     return dailyArray;
 };
 
+const getYelpResponse = async(lat, lng) => {
+    const yelpData = await superagent.get(`https://api.yelp.com/v3/businesses/search?latitude=${lat}&longitude=${lng}`)
+        .set(`Authorization`, `Bearer ${process.env.YELP_API_KEY}`);
+
+
+    const actualYelpData = JSON.parse(yelpData.text);
+    const yelpArray = actualYelpData.yelp.map((item) => {
+        return {
+            name: item.name,
+            image_url: item.image_url,
+            price: item.price,
+            rating: item.rating,
+            url: item.url
+        };
+    });
+
+    return yelpArray;
+};
+
 app.get('/location', async(req, res) => {
     try {
         const searchQuery = req.query.search;
@@ -106,6 +125,17 @@ app.get('/trails', async(req, res) => {
         throw new Error(e);
     }
 });
+
+app.get('/reviews', async(req, res) => {
+    try {
+        const yelpObject = await getYelpResponse(latlngs.latitude, latlngs.longitude);
+
+        res.json(yelpObject);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
 
 app.listen(PORT, () => {
 });
